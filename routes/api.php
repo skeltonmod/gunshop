@@ -32,4 +32,5 @@ Route::post('/acceptRequest', [UserController::class, 'acceptRequest']);
 Route::post('/unfriendUser', [UserController::class, 'unfriendUser']);
 Route::post('/postFeed', [FeedController::class, 'postFeed']);
 Route::post('/purchasePremium', [UserController::class, 'purchasePremium']);
+Route::post('/getFeedFromFriends', [FeedController::class, 'getFeedFromFriends']);
 

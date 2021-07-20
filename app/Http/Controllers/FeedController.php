@@ -7,6 +7,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Models\User;
 
 class FeedController extends Controller
 {
@@ -45,7 +46,45 @@ class FeedController extends Controller
         }
     }
 
-    public function getFeed(Request $request){
+    public function getFeedFromFriends(Request $request){
+        // Get friends
+        $getlist = User::query()->find($request->id);
+        if($getlist){
+            $user = $getlist->getAcceptedFriendships();
+            //Get the feed from your friends
+            $feeds = [];
+            $friends = [];
+            $friendsOther = [];
 
+            // this is what gets rendered on the front
+            $contents = [];
+
+            // Fetch all your friends
+            foreach ($user as $friend){
+                $friends[] = $friend->recipient_id;
+                $friendsOther[] = $friend->sender_id;
+            }
+
+            // Now fetch your friends' feed
+            foreach ($friends as $feed){
+                $feeds[] = Feeds::query()->where('poster', $feed)->first();
+
+            }
+
+            // Do Another pass
+            foreach($friendsOther as $other){
+                $feeds[] = Feeds::query()->where('poster', $other)->first();
+            }
+
+            // Now merge them into one big JSON
+            foreach ($feeds as $content){
+                if($content->file_location != null){
+                    $contents[] = (json_decode(Storage::disk('local')->get($content->file_location)));
+                }
+            }
+            return response($contents);
+        }else{
+            return response([[""], [""]]);
+        }
     }
 }
