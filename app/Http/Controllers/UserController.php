@@ -186,6 +186,7 @@ class UserController extends TestCase
     public function purchasePremium(Request $request){
         Stripe::setApiKey(env('STRIPE_SECRET'));
         $user = User::query()->find($request->id);
+
         // Retrieve Stripe ID
         if(!$user->stripe_id){
             $stripeCustomer = $user->createAsStripeCustomer();
@@ -212,6 +213,18 @@ class UserController extends TestCase
             'customer' => $stripeCustomer,
         ]);
 
-        return response($payment_intent->created);
+        if($payment_intent->created){
+            $user = User::query()
+                ->where('id', $request->id)
+                ->first();
+
+            $affected = DB::table('users')
+                ->where('id', $request->id)
+                ->update(["type"=>"Premium"]);
+
+            return response([$user->refresh()]);
+        }
+
+        return response(['Error'], 500);
     }
 }
