@@ -84,7 +84,7 @@ class FeedController extends Controller
             }
             return response($contents);
         }else{
-            return response([[""], [""]]);
+            return response([["No Feed"], [""]]);
         }
     }
 }

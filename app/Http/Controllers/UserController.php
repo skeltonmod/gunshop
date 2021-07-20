@@ -67,7 +67,6 @@ class UserController extends TestCase
        return response($response);
     }
 
-
     public function editUser(Request $request){
         $validator = Validator::make($request->all(),[
             'userid'=>'required|max:255',
@@ -105,7 +104,6 @@ class UserController extends TestCase
 
     }
 
-
     public function getProfileData(Request $request){
         $user = User::query()->where('userid', $request->userid)->first();
         return response([$user]);
@@ -137,7 +135,6 @@ class UserController extends TestCase
             return response($response, 422);
         }
     }
-
 
     public function sendFriendRequest(Request $request){
         $first_user = User::query()->find($request->acted_user);
@@ -181,6 +178,44 @@ class UserController extends TestCase
         return response([$second_user->denyFriendRequest($first_user)]);
     }
 
+    public function getFriends(Request $request){
+        // Get Friends
+        $user = User::query()->find($request->id);
+        $friends = [];
+
+        foreach ($user->getFriends() as $friend){
+            $friends[] = array(
+                "username"=>$friend->username,
+                "userid"=>$friend->userid,
+                "id"=>$friend->id,
+                "email"=>$friend->email,
+
+            );
+        }
+
+        return response($friends);
+    }
+
+    public function searchFriends(Request $request){
+        // Get Friends
+        $user = DB::table('users')
+            ->where('username', '=', $request->username)
+            ->get();;
+
+        $users = [];
+
+        foreach ($user as $friend){
+            $users[] = array(
+                "username"=>$friend->username,
+                "userid"=>$friend->userid,
+                "id"=>$friend->id,
+                "email"=>$friend->email,
+
+            );
+        }
+
+        return response($users);
+    }
 
     // Premium Account
     public function purchasePremium(Request $request){
