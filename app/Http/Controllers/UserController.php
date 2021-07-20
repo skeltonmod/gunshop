@@ -15,10 +15,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\User;
-use App\Models\Friendship;
 use Illuminate\Support\Str;
+use Laravel\Cashier\Cashier;
+use Stripe\PaymentIntent;
+use Stripe\PaymentMethod;
+use Stripe\Price;
+use Stripe\Stripe;
 use Tests\TestCase;
-use function PHPUnit\Framework\isEmpty;
 
 class UserController extends TestCase
 {
@@ -63,9 +66,6 @@ class UserController extends TestCase
 
        return response($response);
     }
-
-
-
 
 
     public function editUser(Request $request){
@@ -155,9 +155,8 @@ class UserController extends TestCase
         $first_user = User::query()->find($request->acted_user);
         $second_user = User::query()->find($request->second_user);
 
-        $first_user->befriend($second_user);
 
-        return response([$first_user->hasFriendRequestFrom($second_user), $second_user->hasFriendRequestFrom($first_user)]);
+        return response([$first_user->hasFriendRequestFrom($second_user), $second_user->hasFriendRequestFrom($first_user), $first_user->isFriendWith($second_user)]);
     }
 
     public function acceptRequest(Request $request){
@@ -169,4 +168,50 @@ class UserController extends TestCase
         return response([$second_user->acceptFriendRequest($first_user)]);
     }
 
+    public function unfriendUser(Request $request){
+        $first_user = User::query()->find($request->acted_user);
+        $second_user = User::query()->find($request->second_user);
+        return response([$first_user->unfriend($second_user)]);
+    }
+
+    public function declineRequest(Request $request){
+        $first_user = User::query()->find($request->acted_user);
+        $second_user = User::query()->find($request->second_user);
+        $first_user->befriend($second_user);
+        return response([$second_user->denyFriendRequest($first_user)]);
+    }
+
+
+    // Premium Account
+    public function purchasePremium(Request $request){
+        Stripe::setApiKey(env('STRIPE_SECRET'));
+        $user = User::query()->find($request->id);
+        // Retrieve Stripe ID
+        if(!$user->stripe_id){
+            $stripeCustomer = $user->createAsStripeCustomer();
+        }else{
+            $stripeCustomer = $user->stripe_id;
+        }
+
+        $payment = PaymentMethod::create([
+            "type"=> 'card',
+            'card'=>[
+                'number' => $request->creditcard,
+                'exp_month' => $request->expiry_month,
+                'exp_year'=> $request->expiry_year,
+                'cvc' => $request->cvc
+            ]
+        ]);
+
+        $payment_intent = PaymentIntent::create([
+            'amount' => 1000,
+            'currency' => 'usd',
+            'payment_method_types' => ['card'],
+            'payment_method' => $payment->id,
+            'confirm'=>true,
+            'customer' => $stripeCustomer,
+        ]);
+
+        return response($payment_intent->created);
+    }
 }
