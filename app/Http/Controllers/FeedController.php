@@ -48,33 +48,16 @@ class FeedController extends Controller
 
     public function getFeedFromFriends(Request $request){
         // Get friends
-        $getlist = User::query()->find($request->id);
-        if($getlist){
-            $user = $getlist->getAcceptedFriendships();
-            //Get the feed from your friends
-            $feeds = [];
-            $friends = [];
-            $friendsOther = [];
+        $getlist =  Feeds::all();
 
-            // this is what gets rendered on the front
+        if($getlist){
+            //Get the feed from your friends
             $contents = [];
 
-            // Fetch all your friends
-            foreach ($user as $friend){
-                $friends[] = $friend->recipient_id;
-                $friendsOther[] = $friend->sender_id;
-            }
 
-            // Now fetch your friends' feed
-            foreach ($friends as $feed){
-                $feeds[] = Feeds::query()->where('poster', $feed)->first();
-
-            }
-
-            array_push($feeds, Feeds::query()->where('poster', $request->id)->first());
 
             // Now merge them into one big JSON
-            foreach ($feeds as $content){
+            foreach ($getlist as $content){
                 if($content->file_location != null){
                     $contents[] = (json_decode(Storage::disk('local')->get($content->file_location)));
                 }
@@ -83,5 +66,6 @@ class FeedController extends Controller
         }else{
             return response([["No Feed"], [""]]);
         }
+
     }
 }
