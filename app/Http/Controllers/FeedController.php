@@ -71,10 +71,7 @@ class FeedController extends Controller
 
             }
 
-            // Do Another pass
-            foreach($friendsOther as $other){
-                $feeds[] = Feeds::query()->where('poster', $other)->first();
-            }
+            array_push($feeds, Feeds::query()->where('poster', $request->id)->first());
 
             // Now merge them into one big JSON
             foreach ($feeds as $content){

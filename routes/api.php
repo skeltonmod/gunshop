@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\FeedController;
+use App\Http\Controllers\MessagesController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
@@ -35,4 +36,5 @@ Route::post('/unfriendUser', [UserController::class, 'unfriendUser']);
 Route::post('/postFeed', [FeedController::class, 'postFeed']);
 Route::post('/purchasePremium', [UserController::class, 'purchasePremium']);
 Route::post('/getFeedFromFriends', [FeedController::class, 'getFeedFromFriends']);
+Route::post('/sendMessage', [MessagesController::class, 'sendMessage']);
 
